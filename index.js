@@ -1,4 +1,5 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 var fs = require('fs');
 var avro = require('avsc');
 var kafka = require('node-rdkafka');
@@ -45,58 +46,56 @@ var connectionArgs = {
   cache: false,
 }
 
-
 return oada.connect(connectionArgs).then((conn) => {
-  console.log('connected');
-   
+  console.log('OADA connected!');
+
   var consumer = new kafka.KafkaConsumer({
-   'group.id': 'kafka', 
+   'group.id': 'isoblue-heartbeat',
+   'auto.offset.reset': 'latest',
    'metadata.broker.list': 'localhost:9092',
   });
 
   consumer.connect()
   consumer
-    .on('ready', function(message) {
+    .on('ready', function() {
       consumer.subscribe(topics);
       consumer.consume();
     })
-    .on('data', function() {
- 
-      // disregard any message that does not have heartbeat key
-      var key_split = message.key.split(':')
+    .on('data', function(data) {
+
+      /* disregard any message that does not have heartbeat key */
+//      console.log(data)
+//      console.log(data.key.toString())
+      var key_split = data.key.toString().split(':')
       if (key_split[0] != 'hb') {
         return;
       }
 
-      // we have a heartbeat message, get the current (recv) timestamp
-      var recTime = new Date.now() / 1000;
+      /* we have a heartbeat message, get the current (recv) timestamp */
+      var recTime = Date.now() / 1000;
 
-      // get the isoblue id
+      /* get the isoblue id */
       var isoblueId = key_split[1];
 
-      // setup avro decoder
-      var hb_datum = type.fromBuffer(message.value);
+      /* setup avro decoder */
+      var hb_datum = type.fromBuffer(data.value);
 
-      // read each field
+      /* read each field */
       var genTime = hb_datum['timestamp'];
       var cellrssi = hb_datum['cellns'];
       var wifirssi = hb_datum['wifins'];
       var statled = hb_datum['statled'];
       var netled = hb_datum['netled'];
 
-      console.log(genTime, isoblueId, cellrssi, wifirssi, statled, netled)
+//      console.log(genTime, isoblueId, cellrssi, wifirssi, statled, netled)
 
-      // get the day bucket from generation timestamp
-      var day = String(new Date(genTime).toISOString().slice(0, 10));
-      var hour = String(new Date(genTime).getHours());
-      
-      if (hour.length == 1) {
-        hour = '0' + hour
-      }
-      
-      console.log('day_bucket is:', day, 'hr_bucket is:', hour);
+      /* get the day bucket from generation timestamp */
+      var date = String(new Date(genTime * 1000).toISOString().slice(0, 10));
+      var hour = String(new Date(genTime * 1000).getHours());
 
-      // construct the JSON object
+      console.log('date_bucket is:', date, 'hr_bucket is:', hour);
+
+      /* construct the JSON object */
       var data = {
         ts: {
           'genTime': genTime,
@@ -114,14 +113,17 @@ return oada.connect(connectionArgs).then((conn) => {
 
       console.log(data);
 
-      /*
+      /* do the PUT */
       conn.put({
         tree,
-        path:`/bookmarks/isoblue/device-index/${isoblueId}/day-index/${date}/hour-index/${hour}/${bucket}/`,
+        path:
+          `/bookmarks/isoblue/device-index/${isoblueId}/day-index/${date}/` +
+          `hour-index/${hour}:00/heartbeats/`,
         data,
+      }).catch((err) => {
+        console.log(err);
+        throw err;
       });
-      */
-
     });
 });
 
