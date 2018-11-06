@@ -5,7 +5,7 @@ var avro = require('avsc');
 var kafka = require('node-rdkafka');
 var oada = require('@oada/oada-cache').default;
 
-var schema = fs.readFileSync('./d_hb.avsc')
+var schema = fs.readFileSync('./schema/d_hb.avsc')
 var topics = ['debug'];
 var domain = 'https://128.46.71.204';
 var token = 'abc';
