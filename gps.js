@@ -87,22 +87,19 @@ return oada.connect(connectionArgs).then((conn) => {
       /* read each field */
       var genTime = gps_tpv_datum['time'];
       var lat = gps_tpv_datum['lat'];
-      var lon = gps_tpv_datum['lon'];
+      var lng = gps_tpv_datum['lon'];
 
-      console.log(genTime, lat, lon);
 
       /* get the day bucket from generation timestamp */
       var date = String(new Date(genTime * 1000).toISOString().slice(0, 10));
       var hour = String(new Date(genTime * 1000).toTimeString().slice(0, 3)) +
         '00';
 
-      console.log('date_bucket is:', date, 'hr_bucket is:', hour);
-
       /* construct the JSON object */
       var data = {
         [genTime]: {
           'lat': lat,
-          'lon': lon,
+          'lng': lng,
         }
       };
 
@@ -112,15 +109,14 @@ return oada.connect(connectionArgs).then((conn) => {
       console.log(path);
 
       /* do the PUT */
-
-//      conn.put({
-//        tree,
-//        path,
-//        data,
-//      }).catch((err) => {
-//        console.log(err);
-//        throw err;
-//      });
+      conn.put({
+        tree,
+        path,
+        data,
+      }).catch((err) => {
+        console.log(err);
+        throw err;
+      });
     });
 });
 
