@@ -5,7 +5,7 @@ var avro = require('avsc');
 var kafka = require('node-rdkafka');
 var oada = require('@oada/oada-cache').default;
 
-var schema = fs.readFileSync('./schema/d_hb.avsc')
+var schema = fs.readFileSync('./schema/gps.avsc')
 var topics = ['debug'];
 var domain = 'https://128.46.71.204';
 var token = 'abc';
@@ -50,9 +50,9 @@ return oada.connect(connectionArgs).then((conn) => {
   console.log('OADA connected!');
 
   var consumer = new kafka.KafkaConsumer({
-   'group.id': 'isoblue-heartbeat',
+   'group.id': 'isoblue-gps',
    'auto.offset.reset': 'latest',
-   'metadata.broker.list': 'localhost:9092',
+   'metadata.broker.list': 'cloudradio39.ecn.purdue.edu:9092',
   });
 
   consumer.connect()
@@ -64,61 +64,46 @@ return oada.connect(connectionArgs).then((conn) => {
     .on('data', function(data) {
 
       /* disregard any message that does not have heartbeat key */
-//      console.log(data)
-//      console.log(data.key.toString())
       var key_split = data.key.toString().split(':')
-      if (key_split[0] != 'hb') {
+      if (key_split[0] != 'gps') {
         return;
       }
-
-      /* we have a heartbeat message, get the current (recv) timestamp */
-      var recTime = Date.now() / 1000;
 
       /* get the isoblue id */
       var isoblueId = key_split[1];
 
       /* setup avro decoder */
-      var hb_datum = type.fromBuffer(data.value);
+      var gps_datum = type.fromBuffer(data.value);
 
       /* read each field */
       var genTime = hb_datum['timestamp'];
-      var cellrssi = hb_datum['cellns'];
-      var wifirssi = hb_datum['wifins'];
-      var statled = hb_datum['statled'];
-      var netled = hb_datum['netled'];
-
-//      console.log(genTime, isoblueId, cellrssi, wifirssi, statled, netled)
+      var lat = hb_datum['lat'];
+      var lng = hb_datum['lon'];
 
       /* get the day bucket from generation timestamp */
       var date = String(new Date(genTime * 1000).toISOString().slice(0, 10));
-      var hour = String(new Date(genTime * 1000).getHours());
+      var hour = String(new Date(genTime * 1000).toTimeString().slice(0, 3)) + '00';
 
       console.log('date_bucket is:', date, 'hr_bucket is:', hour);
 
       /* construct the JSON object */
       var data = {
-        ts: {
-          'genTime': genTime,
-          'recTime': recTime,
-          'interfaces': [
-            {'type': 'cellular', 'rssi': cellrssi},
-            {'type': 'wifi', 'rssi': wifirssi}
-          ],
-          'ledStatuses': [
-            {'name': 'net', 'status': netled},
-            {'name': 'stat', 'status': statled}
-          ]
+        [genTime]: {
+          'lat': lat,
+          'lon': lon,
         }
       };
 
-      console.log(data);
+      var path = `/bookmarks/isoblue/device-index/${isoblueId}/day-index/${date}/` +
+                 `hour-index/${hour}/gps/`
+
+      console.log(path);
 
       /* do the PUT */
+      
       conn.put({
         tree,
-        path:
-          `/bookmarks/isoblue/device-index/${isoblueId}/day-index/${date}/` +
-          `hour-index/${hour}:00/heartbeats/`,
+        path,
         data,
       }).catch((err) => {
         console.log(err);
