@@ -29,7 +29,6 @@ var tree = {
               "hour-index":{
                 "*": {
                   _type: 'application/vnd.oada.isoblue.hour.1+json',
-                  _rev: "0-0",
                 },
               },
             },
@@ -41,6 +40,7 @@ var tree = {
 };
 
 var connectionArgs = {
+  websocket: false,
   domain,
   token,
   cache: false,
@@ -97,19 +97,21 @@ return oada.connect(connectionArgs).then((conn) => {
 
       /* construct the JSON object */
       var data = {
-        [genTime]: {
-          'lat': lat,
-          'lng': lng,
-        }
+	gps: {
+          [genTime]: {
+            'lat': lat,
+            'lng': lng,
+          }
+	}
       };
 
       var path = `/bookmarks/isoblue/device-index/${isoblueId}/day-index/${date}/` +
-                 `hour-index/${hour}/gps/`
+                 `hour-index/${hour}`
 
       console.log(path);
 
       /* do the PUT */
-      conn.put({
+      return conn.put({
         tree,
         path,
         data,

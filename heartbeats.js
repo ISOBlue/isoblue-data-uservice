@@ -29,7 +29,6 @@ var tree = {
               "hour-index":{
                 "*": {
                   _type: 'application/vnd.oada.isoblue.hour.1+json',
-                  _rev: "0-0",
                 },
               },
             },
@@ -44,6 +43,7 @@ var connectionArgs = {
   domain,
   token,
   cache: false,
+  websocket: false,
 }
 
 return oada.connect(connectionArgs).then((conn) => {
@@ -96,8 +96,9 @@ return oada.connect(connectionArgs).then((conn) => {
       console.log('date_bucket is:', date, 'hr_bucket is:', hour);
 
       /* construct the JSON object */
-      var data = {
-       [genTime]: {
+      var data = { 
+			  heartbeats: {
+          [genTime]: {
           'genTime': genTime,
           'recTime': recTime,
           'interfaces': [
@@ -109,21 +110,21 @@ return oada.connect(connectionArgs).then((conn) => {
             {'name': 'stat', 'status': statled}
           ]
         }
+				}
       };
 
       var path = `/bookmarks/isoblue/device-index/${isoblueId}/day-index/${date}/` +
-                 `hour-index/${hour}/heartbeats/`
+                 `hour-index/${hour}`
 
-      console.log(path);
+      console.log('calling put', path);
 
       /* do the PUT */
-      
-      conn.put({
+      return conn.put({
         tree,
         path,
         data,
       }).catch((err) => {
-        console.log(err);
+        console.log(JSON.stringify(err));
         throw err;
       });
     });
