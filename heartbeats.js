@@ -58,6 +58,7 @@ return oada.connect(connectionArgs).then((conn) => {
   consumer.connect()
   consumer
     .on('ready', function() {
+      console.log('kafka connected!');
       consumer.subscribe(topics);
       consumer.consume();
     })
@@ -90,27 +91,35 @@ return oada.connect(connectionArgs).then((conn) => {
 //      console.log(genTime, isoblueId, cellrssi, wifirssi, statled, netled)
 
       /* get the day bucket from generation timestamp */
-      var date = String(new Date(genTime * 1000).toISOString().slice(0, 10));
-      var hour = String(new Date(genTime * 1000).toTimeString().slice(0, 3)) + '00';
+      var UTCTimestamp = new Date(genTime * 1000);
+      var date = UTCTimestamp.toLocaleDateString().split("/").reverse();
+      var tmp = date[2];
+      date[2] = date[1];
+      date[1] = tmp;
+      date = date.join('-');
+      var hour = UTCTimestamp.toLocaleTimeString('en-US', {hour12: false}).split(":")[0] + ":00";
+
+      //var date = String(new Date(genTime * 1000).toISOString().slice(0, 10));
+      //var hour = String(new Date(genTime * 1000).toTimeString().slice(0, 3)) + '00';
 
       console.log('date_bucket is:', date, 'hr_bucket is:', hour);
 
       /* construct the JSON object */
       var data = { 
-			  heartbeats: {
+        heartbeats: {
           [genTime]: {
-          'genTime': genTime,
-          'recTime': recTime,
-          'interfaces': [
-            {'type': 'cellular', 'rssi': cellrssi},
-            {'type': 'wifi', 'rssi': wifirssi}
-          ],
-          'ledStatuses': [
-            {'name': 'net', 'status': netled},
-            {'name': 'stat', 'status': statled}
-          ]
+            'genTime': genTime,
+            'recTime': recTime,
+            'interfaces': [
+              {'type': 'cellular', 'rssi': cellrssi},
+              {'type': 'wifi', 'rssi': wifirssi}
+            ],
+            'ledStatuses': [
+              {'name': 'net', 'status': netled},
+              {'name': 'stat', 'status': statled}
+            ]
+          }
         }
-				}
       };
 
       var path = `/bookmarks/isoblue/device-index/${isoblueId}/day-index/${date}/` +
@@ -118,6 +127,7 @@ return oada.connect(connectionArgs).then((conn) => {
 
       console.log('calling put', path);
 
+      
       /* do the PUT */
       return conn.put({
         tree,

@@ -59,6 +59,7 @@ return oada.connect(connectionArgs).then((conn) => {
   consumer.connect()
   consumer
     .on('ready', function() {
+      console.log('kafka connected!');
       consumer.subscribe(topics);
       consumer.consume();
     })
@@ -91,9 +92,16 @@ return oada.connect(connectionArgs).then((conn) => {
 
 
       /* get the day bucket from generation timestamp */
-      var date = String(new Date(genTime * 1000).toISOString().slice(0, 10));
-      var hour = String(new Date(genTime * 1000).toTimeString().slice(0, 3)) +
-        '00';
+      var UTCTimestamp = new Date(genTime * 1000);
+      var date = UTCTimestamp.toLocaleDateString().split("/").reverse();
+      var tmp = date[2];
+      date[2] = date[1];
+      date[1] = tmp;
+      date = date.join('-');
+      var hour = UTCTimestamp.toLocaleTimeString('en-US', {hour12: false}).split(":")[0] + ":00";
+
+      //var date = String(new Date(genTime * 1000).toISOString().slice(0, 10));
+      //var hour = String(new Date(genTime * 1000).toTimeString().slice(0, 3)) + '00';
 
       /* construct the JSON object */
       var data = {
