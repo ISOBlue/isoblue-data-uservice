@@ -7,9 +7,11 @@ var oada = require("@oada/oada-cache").default;
 
 var schema = fs.readFileSync("./schema/gps.avsc");
 var topics = ["remote"];
-var domain = "https://128.46.71.204";
+const domain = process.env.OADA_URL;
+const kafka_group_id = process.env.KAFKA_GROUP_ID || "isoblue-gps";
 var token = "abc";
 const type = avro.Type.forSchema(JSON.parse(schema));
+const kafka_broker = process.env.KAFKA_BROKER;
 
 var tree = {
   bookmarks: {
@@ -46,93 +48,105 @@ var connectionArgs = {
   cache: false,
 };
 
-return oada.connect(connectionArgs).then(conn => {
+oada.connect(connectionArgs).then(conn => {
   console.log("OADA connected!");
 
   var consumer = new kafka.KafkaConsumer({
-    "group.id": "isoblue-gps",
+    //debug: "all",
+    "group.id": kafka_group_id,
     "auto.offset.reset": "latest",
-    "metadata.broker.list": "cloudradio39.ecn.purdue.edu:9092",
-    //   'metadata.broker.list': 'localhost:9092',
+    "metadata.broker.list": kafka_broker,
   });
 
-  consumer.connect();
-  consumer
-    .on("ready", function() {
-      console.log("kafka connected!");
-      consumer.subscribe(topics);
-      consumer.consume();
-    })
-    .on("data", function(data) {
-      /* disregard any message that does not have heartbeat key */
-      var key_split = data.key.toString().split(":");
-      if (key_split[0] != "gps") {
-        return;
-      }
+  //log debug messages
+  consumer.on("event.log", function(log) {
+    console.log(log);
+  });
 
-      /* get the isoblue id */
-      var isoblueId = key_split[1];
+  // log error messages
+  consumer.on("event.error", function(err) {
+    console.error("Error from consumer");
+    console.error(err);
+  });
 
-      /* setup avro decoder */
-      var gps_datum = type.fromBuffer(data.value);
+  // ready
+  consumer.on("ready", function(args) {
+    console.log("kafka ready.");
+    console.log(args);
+    consumer.subscribe(topics);
+    consumer.consume();
+  });
 
-      //      console.log(gps_datum.gps.object_name)
+  // handle data
+  consumer.on("data", function(m) {
+    /* disregard any message that does not have heartbeat key */
+    var key_split = m.key.toString().split(":");
+    if (key_split[0] != "gps") {
+      return;
+    }
 
-      if (gps_datum.gps.object_name === "TPV") {
-        gps_tpv_datum = gps_datum.gps.object.tpv_record;
-        //        console.log(gps_tpv_datum);
-      } else {
-        return;
-      }
+    /* get the isoblue id */
+    var isoblueId = key_split[1];
 
-      /* read each field */
-      var genTime = gps_tpv_datum["time"];
-      var lat = gps_tpv_datum["lat"];
-      var lng = gps_tpv_datum["lon"];
+    /* setup avro decoder */
+    var gps_datum = type.fromBuffer(m.value);
 
-      /* get the day bucket from generation timestamp */
-      var UTCTimestamp = new Date(genTime * 1000);
-      var date = UTCTimestamp.toLocaleDateString()
-        .split("/")
-        .reverse();
-      var tmp = date[2];
-      date[2] = date[1];
-      date[1] = tmp;
-      date = date.join("-");
-      var hour =
-        UTCTimestamp.toLocaleTimeString("en-US", { hour12: false }).split(
-          ":",
-        )[0] + ":00";
+    if (gps_datum.gps.object_name !== "TPV") {
+      return;
+    }
+    const gps_tpv_datum = gps_datum.gps.object.tpv_record;
 
-      //var date = String(new Date(genTime * 1000).toISOString().slice(0, 10));
-      //var hour = String(new Date(genTime * 1000).toTimeString().slice(0, 3)) + '00';
+    /* read each field */
+    var genTime = gps_tpv_datum["time"];
+    var lat = gps_tpv_datum["lat"];
+    var lng = gps_tpv_datum["lon"];
 
-      /* construct the JSON object */
-      var data = {
-        gps: {
-          [genTime]: {
-            lat: lat,
-            lng: lng,
-          },
+    // log
+    console.log(`Rcvd: t=${genTime} lat=${lat} lon=${lng}`);
+
+    /* get the day bucket from generation timestamp */
+    var UTCTimestamp = new Date(genTime * 1000);
+    var date = UTCTimestamp.toLocaleDateString()
+      .split("/")
+      .reverse();
+    var tmp = date[2];
+    date[2] = date[1];
+    date[1] = tmp;
+    date = date.join("-");
+    var hour =
+      UTCTimestamp.toLocaleTimeString("en-US", { hour12: false }).split(
+        ":",
+      )[0] + ":00";
+
+    /* construct the JSON object */
+    var data = {
+      gps: {
+        [genTime]: {
+          lat: lat,
+          lng: lng,
         },
-      };
+      },
+    };
 
-      var path =
-        `/bookmarks/isoblue/device-index/${isoblueId}/day-index/${date}/` +
-        `hour-index/${hour}`;
+    var path =
+      `/bookmarks/isoblue/device-index/${isoblueId}/day-index/${date}/` +
+      `hour-index/${hour}`;
 
-      console.log(path);
+    console.log(path);
 
-      /* do the PUT */
-      return conn
-        .put({
-          tree,
-          path,
-          data,
-        })
-        .catch(err => {
-          console.log(err);
-          throw err;
-        });
-    });
+    /* do the PUT */
+    conn
+      .put({
+        tree,
+        path,
+        data,
+      })
+      .catch(err => {
+        console.log(err);
+        throw err;
+      });
+  });
+
+  // connect
+  consumer.connect();
 });
