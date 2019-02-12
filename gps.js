@@ -105,18 +105,13 @@ oada.connect(connectionArgs).then(conn => {
     console.log(`Rcvd: t=${genTime} lat=${lat} lon=${lng}`);
 
     /* get the day bucket from generation timestamp */
-    var UTCTimestamp = new Date(genTime * 1000);
-    var date = UTCTimestamp.toLocaleDateString()
-      .split("/")
-      .reverse();
-    var tmp = date[2];
-    date[2] = date[1];
-    date[1] = tmp;
-    date = date.join("-");
+    var ts = new Date(genTime * 1000);
+    var date = ts.toISOString().split("T")[0];
     var hour =
-      UTCTimestamp.toLocaleTimeString("en-US", { hour12: false }).split(
-        ":",
-      )[0] + ":00";
+      ts
+        .toISOString()
+        .split("T")[1]
+        .split(":")[0] + ":00";
 
     /* construct the JSON object */
     var data = {
