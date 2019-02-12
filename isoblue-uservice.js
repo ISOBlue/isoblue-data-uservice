@@ -55,12 +55,17 @@ var connectionArgs = {
 oada.connect(connectionArgs).then(conn => {
   console.log("OADA connected!");
 
-  var consumer = new kafka.KafkaConsumer({
-    //debug: "all",
-    "group.id": kafka_group_id,
-    "auto.offset.reset": "latest",
-    "metadata.broker.list": kafka_broker,
-  });
+  var consumer = new kafka.KafkaConsumer(
+    {
+      //debug: "all",
+      "group.id": kafka_group_id,
+      "metadata.broker.list": kafka_broker,
+      "enable.auto.commit": false,
+    },
+    {
+      "auto.offset.reset": "latest",
+    },
+  );
 
   //log debug messages
   consumer.on("event.log", function(log) {
