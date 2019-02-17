@@ -138,7 +138,6 @@ oada.connect(connectionArgs).then(conn => {
       })
       .catch(err => {
         console.log(err);
-        throw err;
       });
   }
 
@@ -202,7 +201,6 @@ oada.connect(connectionArgs).then(conn => {
       })
       .catch(err => {
         console.log(err);
-        throw err;
       });
   }
 
