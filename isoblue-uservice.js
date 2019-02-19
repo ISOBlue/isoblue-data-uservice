@@ -65,6 +65,7 @@ oada.connect(connectionArgs).then(conn => {
     {
       "auto.offset.reset": "latest",
     },
+    { encoding: "buffer" },
   );
 
   //log debug messages
