@@ -91,8 +91,13 @@ oada.connect(connectionArgs).then(conn => {
   function handleGPSmsg(m) {
     const key_split = m.key.toString().split(":");
     const isoblueId = key_split[1]; // ISOBlue ID
-    const gps_datum = type_gps.fromBuffer(m.value); // deserialize
-
+    var gps_datum;
+    try {
+      gps_datum = type_gps.fromBuffer(m.value); // deserialize
+    } catch (err) {
+      console.error("Invalid GPS message.");
+      return;
+    }
     if (gps_datum.gps.object_name !== "TPV") {
       return;
     }
@@ -146,7 +151,13 @@ oada.connect(connectionArgs).then(conn => {
   function handleHBmsg(m) {
     const key_split = m.key.toString().split(":");
     const isoblueId = key_split[1]; // ISOBlue ID
-    const hb_datum = type_hb.fromBuffer(m.value); // deserialize
+    var hb_datum;
+    try {
+      hb_datum = type_hb.fromBuffer(m.value); // deserialize
+    } catch (err) {
+      console.error("Invalid heartbeat message.");
+      return;
+    }
 
     /* read each field */
     const genTime = hb_datum["timestamp"];
