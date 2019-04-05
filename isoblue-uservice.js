@@ -28,13 +28,17 @@ var tree = {
         "*": {
           _type: "application/vnd.oada.isoblue.device.1+json",
           _rev: "0-0",
-          "day-index": {
-            "*": {
-              _type: "application/vnd.oada.isoblue.day.1+json",
-              _rev: "0-0",
-              "hour-index": {
-                "*": {
-                  _type: "application/vnd.oada.isoblue.hour.1+json",
+          "*": {
+            _type: "application/vnd.oada.isoblue.dataset.1+json",
+            _rev: "0-0",
+            "day-index": {
+              "*": {
+                _type: "application/vnd.oada.isoblue.day.1+json",
+                _rev: "0-0",
+                "hour-index": {
+                  "*": {
+                    _type: "application/vnd.oada.isoblue.hour.1+json",
+                  },
                 },
               },
             },
@@ -122,17 +126,15 @@ oada.connect(connectionArgs).then(conn => {
 
     /* construct the JSON object */
     const data = {
-      gps: {
-        [genTime]: {
-          lat: lat,
-          lng: lng,
-        },
+      [genTime]: {
+        lat: lat,
+        lng: lng,
       },
     };
 
     // path
     const path =
-      `/bookmarks/isoblue/device-index/${isoblueId}/day-index/${date}/` +
+      `/bookmarks/isoblue/device-index/${isoblueId}/gps/day-index/${date}/` +
       `hour-index/${hour}`;
 
     // put
@@ -183,25 +185,23 @@ oada.connect(connectionArgs).then(conn => {
 
     /* construct the JSON object */
     const data = {
-      heartbeats: {
-        [genTime]: {
-          genTime: genTime,
-          recTime: recTime,
-          interfaces: [
-            { type: "cellular", rssi: cellrssi },
-            { type: "wifi", rssi: wifirssi },
-          ],
-          ledStatuses: [
-            { name: "net", status: netled },
-            { name: "stat", status: statled },
-          ],
-        },
+      [genTime]: {
+        genTime: genTime,
+        recTime: recTime,
+        interfaces: [
+          { type: "cellular", rssi: cellrssi },
+          { type: "wifi", rssi: wifirssi },
+        ],
+        ledStatuses: [
+          { name: "net", status: netled },
+          { name: "stat", status: statled },
+        ],
       },
     };
 
     // path
     var path =
-      `/bookmarks/isoblue/device-index/${isoblueId}/day-index/${date}/` +
+      `/bookmarks/isoblue/device-index/${isoblueId}/heartbeat/day-index/${date}/` +
       `hour-index/${hour}`;
 
     // put
