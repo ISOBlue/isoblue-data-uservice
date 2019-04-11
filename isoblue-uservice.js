@@ -134,7 +134,7 @@ oada.connect(connectionArgs).then(conn => {
 
     // path
     const path =
-      `/bookmarks/isoblue/device-index/${isoblueId}/gps/day-index/${date}/` +
+      `/bookmarks/isoblue/device-index/${isoblueId}/location/day-index/${date}/` +
       `hour-index/${hour}`;
 
     // put
