@@ -1,0 +1,22 @@
+{
+	"type": "record",
+	"name": "dls",
+	"fields": [
+		{
+			"name": "timestamp",
+			"type": "int"
+		},
+      {
+          "name": "gpslogsize",
+          "type": "long"
+      },
+      {
+          "name": "tralogsize",
+          "type": "long"
+      },
+      {
+          "name": "implogsize",
+          "type": "long"
+      }
+	]
+}
