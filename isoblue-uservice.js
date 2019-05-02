@@ -126,9 +126,11 @@ oada.connect(connectionArgs).then(conn => {
 
     /* construct the JSON object */
     const data = {
-      [genTime]: {
-        lat: lat,
-        lng: lng,
+      "sec-index": {
+        [genTime]: {
+          lat: lat,
+          lng: lng,
+        },
       },
     };
 
@@ -185,17 +187,19 @@ oada.connect(connectionArgs).then(conn => {
 
     /* construct the JSON object */
     const data = {
-      [genTime]: {
-        genTime: genTime,
-        recTime: recTime,
-        interfaces: [
-          { type: "cellular", rssi: cellrssi },
-          { type: "wifi", rssi: wifirssi },
-        ],
-        ledStatuses: [
-          { name: "net", status: netled },
-          { name: "stat", status: statled },
-        ],
+      "sec-index": {
+        [genTime]: {
+          genTime: genTime,
+          recTime: recTime,
+          interfaces: [
+            { type: "cellular", rssi: cellrssi },
+            { type: "wifi", rssi: wifirssi },
+          ],
+          ledStatuses: [
+            { name: "net", status: netled },
+            { name: "stat", status: statled },
+          ],
+        },
       },
     };
 
