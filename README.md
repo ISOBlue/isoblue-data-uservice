@@ -31,3 +31,6 @@ To start the container, run:
 ``` shell
 docker run --env-file defaultenv.list isoblue-uservice
 ```
+
+## Notes
+* For development, you may need to set `NODE_TLS_REJECT_UNAUTHORIZED=0` in `defaultenv.list` to ignore self-signed certificates. (WARNING: This is insecure!)

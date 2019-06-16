@@ -1,3 +1,6 @@
-OADA_URL=https://127.0.0.1
-KAFKA_BROKER=example.com:9092
-KAFKA_GROUP_ID=isoblue-data
+OADA_URL="https://127.0.0.1"
+OADA_TOKEN="abc"
+KAFKA_BROKER="example.com:9092"
+KAFKA_GROUP_ID="isoblue-data"
+NODE_TLS_REJECT_UNAUTHORIZED=1
+DEBUG="isoblue-data-uservice:error"
