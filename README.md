@@ -33,4 +33,5 @@ docker run --env-file defaultenv.list isoblue-uservice
 ```
 
 ## Notes
+* The docker container may not be able to connect to an OADA server or a Kafka broker running on `localhost`. This is because the container uses the `bridge` networking mode by default. You can add `--network="host"` argument to the `docker run` command as a workaround. You can find more information [here](https://docs.docker.com/network/host/).
 * For development, you may need to set `NODE_TLS_REJECT_UNAUTHORIZED=0` in `defaultenv.list` to ignore self-signed certificates. (WARNING: This is insecure!)
