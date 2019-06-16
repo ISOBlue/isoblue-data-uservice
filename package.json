@@ -1,11 +1,12 @@
 {
   "name": "isobluedataservice",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "",
   "main": "isoblue-uservice.js",
   "dependencies": {
-    "@oada/oada-cache": "^2.0.7",
+    "@oada/oada-cache": "^2.1.0",
     "avsc": "^5.4.6",
+    "debug": "^4.1.1",
     "node-rdkafka": "^2.4.2"
   },
   "devDependencies": {},
@@ -14,8 +15,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jafiecht/isoblueDataService.git"
+    "url": "https://github.com/ISOBlue/isoblue-data-uservice.git"
   },
   "author": "",
-  "license": "ISC"
+  "license": "Apache-2.0"
 }
