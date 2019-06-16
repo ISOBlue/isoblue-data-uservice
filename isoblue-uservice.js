@@ -8,7 +8,7 @@ var oada = require("@oada/oada-cache").default;
 
 // Logging
 var logInfo = require("debug")("isoblue-data-uservice:info");
-var logError = require("error")("isoblue-data-uservice:error");
+var logError = require("debug")("isoblue-data-uservice:error");
 
 // Parameters
 const topics = ["remote", "debug"]; // Kafka topics
